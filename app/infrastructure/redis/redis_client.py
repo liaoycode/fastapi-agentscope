@@ -4,10 +4,11 @@ from redis.asyncio import Redis, ConnectionPool
 from app.core.config.env_config import settings
 
 _pool: ConnectionPool = None
+_redis: Redis | None = None  # 新增：缓存 Redis 实例
 
 
 def init_pool():
-    global _pool
+    global _pool, _redis
     if _pool is not None:
         return
     _pool = ConnectionPool.from_url(
@@ -15,18 +16,22 @@ def init_pool():
         max_connections=settings.redis_max_connections,
         decode_responses=True,
     )
+    _redis = Redis(connection_pool=_pool)  # 只创建一次
+
 
 
 async def close_pool():
-    global _pool
+    global _pool, _redis  # ✅ 必须声明 global
+    if _redis:
+        await _redis.close()
     if _pool:
         await _pool.disconnect()
 
 
 def _get_redis() -> Redis:
-    if _pool is None:
+    if _redis is None:
         raise RuntimeError("Redis未初始化，请检查 RedisPlugin 是否正常启动")
-    return Redis(connection_pool=_pool)
+    return _redis
 
 
 class RedisClient:

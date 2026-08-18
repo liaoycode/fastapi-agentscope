@@ -1,12 +1,38 @@
 # app/schemas/base.py
 from pydantic import BaseModel, Field, computed_field
 from typing import Generic, TypeVar, Optional
-from fastapi import Query
 
 T = TypeVar('T')
 
 
-class PageRequest(BaseModel):
+from typing import Any, Generic, TypeVar, Optional
+from datetime import datetime
+from pydantic import BaseModel, Field, field_serializer
+
+# T = TypeVar("T")
+
+class ApiResponse(BaseModel, Generic[T]):
+    code: int = Field(default=200)
+    message: str = Field(default="success")
+    data: Optional[T] = None
+
+    @classmethod
+    def ok(cls, data: T = None):
+        return cls(data=data)
+
+    @classmethod
+    def error(cls, code: int = -1, message: str = "error"):
+        return cls(code=code, message=message)
+
+    model_config = {
+        "arbitrary_types_allowed": True,
+        "json_encoders": {
+            datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
+        }
+    }
+
+
+class PageParams(BaseModel):
     """分页请求参数"""
     page: int = Field(default=1, ge=1, description="页码，从1开始")
     size: int = Field(default=10, ge=1, le=100, description="每页大小")
@@ -16,7 +42,7 @@ class PageRequest(BaseModel):
         return (self.page - 1) * self.size
 
 
-class PageResponse(BaseModel, Generic[T]):
+class PageResult(BaseModel, Generic[T]):
     """通用分页响应模型"""
     items: list[T] = Field(..., description="数据列表")
     current_page: int = Field(..., ge=1, description="当前页码")
@@ -52,7 +78,7 @@ class PageResponse(BaseModel, Generic[T]):
         return self.current_page + 1 if self.has_next else None
 
     @classmethod
-    def of(cls, items: list, total_count: int, page: PageRequest) -> dict:
+    def of(cls, items: list, total_count: int, page: PageParams) -> dict:
         """返回 dict 配合 ApiResponse.ok 使用"""
         return {
             "items": items,

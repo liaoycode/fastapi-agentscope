@@ -4,9 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/core/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/config/__init__.py" afterDir="false" />
+    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/bootstrap/router/router_plugin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/bootstrap/router/router_plugin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/common/repeat_submit_guard.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security/repeat_submit_guard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/common/time_elapse.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/decorators/time_elapse.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/domain/model/sys_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/model/sys_user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/domain/schema/api_response.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/domain/schema/page_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/schema/common.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/infrastructure/datasource/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/datasource/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/infrastructure/redis/redis_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/redis/redis_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/router/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/router/user_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/user_router.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/services/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,18 +43,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/home/liaoyun/cmdi/code/fastapi-demo",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/liaoyun/cmdi/code/fastapi-demo/app/core/common&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/app/core/common" />
@@ -50,11 +62,11 @@
       <recent name="$PROJECT_DIR$/app/core/exceptions/exception" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/app/core" />
-      <recent name="$PROJECT_DIR$/app/core/common/bootstrap/router" />
-      <recent name="$PROJECT_DIR$/app/core/common/bootstrap/nacos" />
-      <recent name="$PROJECT_DIR$/app/core/common/bootstrap" />
-      <recent name="$PROJECT_DIR$/app" />
+      <recent name="$PROJECT_DIR$/app/domain/schema" />
+      <recent name="$PROJECT_DIR$/app/core/utils" />
+      <recent name="$PROJECT_DIR$/app/core/schemas" />
+      <recent name="$PROJECT_DIR$/app/core/security" />
+      <recent name="$PROJECT_DIR$/app/api/v1" />
     </key>
   </component>
   <component name="RunManager">
@@ -101,7 +113,20 @@
       <option name="presentableId" value="Default" />
       <updated>1780563279882</updated>
     </task>
+    <task id="LOCAL-00001" summary="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制">
+      <option name="closed" value="true" />
+      <created>1784275901764</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1784275901764</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -122,22 +147,22 @@
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/core/common/repeat_submit_guard.py</url>
+          <url>file://$PROJECT_DIR$/app/core/security/repeat_submit_guard.py</url>
           <line>84</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/core/common/repeat_submit_guard.py</url>
+          <url>file://$PROJECT_DIR$/app/core/security/repeat_submit_guard.py</url>
           <line>83</line>
           <option name="timeStamp" value="20" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/core/common/repeat_submit_guard.py</url>
+          <url>file://$PROJECT_DIR$/app/core/security/repeat_submit_guard.py</url>
           <line>89</line>
           <option name="timeStamp" value="21" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/core/common/repeat_submit_guard.py</url>
+          <url>file://$PROJECT_DIR$/app/core/security/repeat_submit_guard.py</url>
           <line>79</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>

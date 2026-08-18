@@ -10,7 +10,7 @@ from app.core.bootstrap.abs_boot_plugin import AppPlugin
 
 class RouterPlugin(AppPlugin):
     async def on_startup(self, app: FastAPI):
-        _register_routers(app, "app.router")
+        _register_routers(app, "app.api.v1")
 
     async def on_shutdown(self, app: FastAPI): ...
 
