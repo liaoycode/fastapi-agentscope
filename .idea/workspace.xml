@@ -4,19 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制">
+    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="修改">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/bootstrap/router/router_plugin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/bootstrap/router/router_plugin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/common/repeat_submit_guard.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security/repeat_submit_guard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/common/time_elapse.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/decorators/time_elapse.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/domain/model/sys_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/model/sys_user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/domain/schema/api_response.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/domain/schema/page_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/schema/common.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/infrastructure/datasource/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/datasource/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/infrastructure/redis/redis_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/redis/redis_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/router/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/router/user_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/user_router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/services/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/bootstrap/database/database_plugin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/bootstrap/database/database_plugin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/config/env_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config/env_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
     </list>
@@ -50,23 +44,25 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/liaoyun/cmdi/code/fastapi-demo/app/core/common&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;agent&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/liaoyun/cmdi/code/fastapi-demo&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/docker" />
+      <recent name="$PROJECT_DIR$/app/core/bootstrap/agentscope" />
       <recent name="$PROJECT_DIR$/app/core/common" />
       <recent name="$PROJECT_DIR$/app/core/exceptions" />
-      <recent name="$PROJECT_DIR$/app/core/exceptions/exception" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/app/domain/schema" />
-      <recent name="$PROJECT_DIR$/app/core/utils" />
-      <recent name="$PROJECT_DIR$/app/core/schemas" />
-      <recent name="$PROJECT_DIR$/app/core/security" />
-      <recent name="$PROJECT_DIR$/app/api/v1" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox" />
+      <recent name="$PROJECT_DIR$/app/domain/services" />
+      <recent name="$PROJECT_DIR$/app/infrastructure/agentscope/workspace" />
+      <recent name="$PROJECT_DIR$/app/infrastructure/agentscope/init" />
     </key>
   </component>
   <component name="RunManager">
@@ -90,6 +86,12 @@
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="dockerfile" temporary="true">
+      <deployment type="dockerfile">
+        <settings />
+      </deployment>
       <method v="2" />
     </configuration>
     <recent_temporary>
@@ -121,12 +123,29 @@
       <option name="project" value="LOCAL" />
       <updated>1784275901764</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="修改">
+      <option name="closed" value="true" />
+      <created>1787025125286</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1787025125286</updated>
+    </task>
+    <task id="LOCAL-00003" summary="修改">
+      <option name="closed" value="true" />
+      <created>1787025145445</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1787025145445</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制" />
+    <MESSAGE value="修改" />
+    <option name="LAST_COMMIT_MESSAGE" value="修改" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -165,6 +184,16 @@
           <url>file://$PROJECT_DIR$/app/core/security/repeat_submit_guard.py</url>
           <line>79</line>
           <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/infrastructure/agentscope/agent.py</url>
+          <line>196</line>
+          <option name="timeStamp" value="25" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/infrastructure/agentscope/agent.py</url>
+          <line>123</line>
+          <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

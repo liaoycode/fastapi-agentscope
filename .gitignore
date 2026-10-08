@@ -11,3 +11,12 @@ wheels/
 
 #logs
 logs
+
+# runtime
+.runtime
+
+# claude
+.claude
+
+# idea
+.idea

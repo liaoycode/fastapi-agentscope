@@ -4,6 +4,8 @@ import inspect
 import pkgutil
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.bootstrap.abs_boot_plugin import AppPlugin
 from app.core.common.logger import getLogger, setup_logger
@@ -49,6 +51,16 @@ def create_app() -> FastAPI:
     )
 
     setup_exception_handlers(app)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
+    # app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
     return app
 

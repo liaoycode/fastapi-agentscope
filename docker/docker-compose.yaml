@@ -1,0 +1,44 @@
+# ── fastapi-demo 容器化部署(本机 docker 作为沙箱)──────────────
+#
+# 设计点(踩过的坑,直接抄):
+#
+# 1. /agent/code 用 bind mount 整个项目根
+#    - host 上改代码 → 容器内立刻可见(配合 uvicorn --reload 即热重启)
+#    - host 上加/删 public skill → 下次 sandbox 创建立即生效
+#    - Dockerfile 里 COPY skills ./skills 是 baked-in 兜底;被 mount 覆盖时
+#      优先用 host 上的(生产环境可以去掉这条 mount,纯 baked-in)
+#
+# 2. /agent/code/logs mount host 持久化日志
+#    - 抓 stdout 也能看,但挂出来更便于 tail/grep/rotate
+#
+# 3. /var/run/docker.sock 必须挂
+#    - app 通过 host docker daemon 拉/管理 sandbox 容器(命名卷/snapshot
+#      也都在 host docker 上)
+#    - 安全提醒:app 容器内 root == host docker 权限,等价于 root on host。
+#      开发 / 内网 OK;对外租户前换 dind sidecar。
+#
+# 用法(从项目根跑):
+#       docker compose -f docker/docker-compose.yaml up -d
+#       docker compose -f docker/docker-compose.yaml logs -f app
+#       docker compose -f docker/docker-compose.yaml down
+
+name: fastapi-demo
+
+services:
+  app:
+    build:
+      # Dockerfile 在 docker/,build context 是项目根(因为 COPY 要拿 pyproject.toml)
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: fastapi-demo:local
+    restart: unless-stopped
+    volumes:
+      # 项目根:改代码 + 加 public skill 立刻生效
+      - ${PWD}:/agent/code
+      # 日志:host 上直接看,不进容器抓 stdout
+      - ${PWD}/logs:/agent/code/logs
+      # docker socket:让 app 通过 host docker 管理 sandbox 容器
+      # sandbox 容器会以 label `agentscope.sandbox=true` 出现在 docker ps 里
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
