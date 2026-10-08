@@ -62,11 +62,6 @@ class Settings(BaseSettings):
     # per-user sandbox & hardening
     agent_workspace_pids_limit: int = 512
     agent_workspace_cpu_shares: int = 512
-    # 给 sandbox 容器注入 PYTHONUNBUFFERED=1。
-    # 沙箱无 TTY,sandbox 镜像模板也没设,Python 会切到块缓冲(4KB),
-    # print 要等凑满或进程退出才 flush,docker logs 看不到实时日志。
-    # 默认开;调试需要块缓冲(比如压测 IO 抖动)时可关。
-    agent_workspace_python_unbuffered: bool = True
     # 闲置多久回收 per-user 容器(秒)
     agent_workspace_idle_ttl_seconds: int = 600
     # 后台 reaper 巡检间隔(秒)

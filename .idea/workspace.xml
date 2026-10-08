@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="增加agentscope智能体">
+    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="增加沙箱日志输出控制">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/config/env_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config/env_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/user_workspace.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/user_workspace.py" afterDir="false" />
@@ -142,14 +143,23 @@
       <option name="project" value="LOCAL" />
       <updated>1791421764496</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="增加沙箱日志输出控制">
+      <option name="closed" value="true" />
+      <created>1791424720205</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1791424720205</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制" />
     <MESSAGE value="修改" />
     <MESSAGE value="增加agentscope智能体" />
-    <option name="LAST_COMMIT_MESSAGE" value="增加agentscope智能体" />
+    <MESSAGE value="增加沙箱日志输出控制" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加沙箱日志输出控制" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

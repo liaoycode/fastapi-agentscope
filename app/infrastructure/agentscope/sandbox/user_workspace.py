@@ -169,14 +169,8 @@ class HardenedDockerWorkspace(DockerWorkspace):
                 "agentscope.sandbox.id": self.workspace_id,
             },
         }
-        # 沙箱无 TTY + sandbox 镜像模板未设 PYTHONUNBUFFERED,默认注入 1
-        # 让 print 行缓冲,docker logs 能实时看到。开关走 settings。
-        # 调用方在 self.env 里显式传同名 key 可覆盖(比如调试想关掉)。
-        merged_env = dict(self.env or {})
-        if settings.agent_workspace_python_unbuffered:
-            merged_env.setdefault("PYTHONUNBUFFERED", "1")
-        if merged_env:
-            config["Env"] = [f"{k}={v}" for k, v in merged_env.items()]
+        if self.env:
+            config["Env"] = [f"{k}={v}" for k, v in self.env.items()]
 
         # 在默认容器配置之上叠加加固项
         host_config: dict[str, Any] = {
