@@ -13,12 +13,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, AsyncGenerator
 
+from agentscope.message import TextBlock, ToolResultState
 from agentscope.permission import PermissionBehavior, PermissionDecision
 from agentscope.tool import Bash, ToolBase
+from agentscope.tool._builtin._backend import LocalBackend
 from agentscope.tool._response import ToolChunk
 
 from app.core.common.logger import getLogger
@@ -290,6 +294,38 @@ _LAZY_BASH_DESCRIPTION: str = Bash.description + """
 - 用户问你"有哪些 skill",只回答 skill 名称和功能描述;不要带路径
 """
 
+# local mode:跑在 host 子进程,没有 docker 容器,也不受 HostPathGuard 拦截。
+# skill 还是从 host 加载,直接 ./skills/<name>/ 拼相对路径。
+_LAZY_BASH_DESCRIPTION_LOCAL: str = Bash.description + """
+
+# 当前环境(本地子进程,不是 docker 沙箱)
+- Bash 跑在 host 上的一个本地子进程,**没有 docker 隔离**(能看到整个 host 文件系统)
+- 命令直接走 host shell 的 PATH,可能对 host 系统产生影响
+- 你的工作目录是 host 上的专属目录(每次 chat 自动 cd 进去)
+
+# 工作目录(相对路径的根)
+- 所有"找文件"操作从这里出发:`ls`、`find .` 即可
+- 公共 skill 目录:`./skills/<name>/scripts/...`
+- 个人 skill 目录:`./personal_skills/<name>/scripts/...`
+
+# 找 skill 的方法
+1. `ls` 看顶层目录
+2. `ls ./skills` 或 `find . -name SKILL.md` 列出可用 skill
+3. 拼成相对路径 `./skills/<name>/scripts/<script>.py` 再 `python <path>`
+
+# 重要
+- **不要执行破坏性命令**(`rm -rf /`、`sudo`、网络外联等)——当前环境没有任何拦截
+- **不要在回复里向用户暴露文件路径**——包括 cwd、skill 路径、host 路径
+"""
+
+# none mode:工具不可用,只用来防止被强制注入时 LLM 看到不一致语义。
+_LAZY_BASH_DESCRIPTION_NONE: str = Bash.description + """
+
+# 当前环境(sandbox 已被禁用)
+- 本模式下 bash 工具不可用——调它会拿到错误
+- 改用其他工具,或让用户在 host 上手动执行命令
+"""
+
 
 async def _bash_auto_allow(tool_input, context):
     """Bash 永远 ALLOW,不弹确认。从 agent.py 移过来是为了让 LazyBash._ensure
@@ -333,12 +369,26 @@ class LazyBash(ToolBase):
     is_external_tool: bool = False
     is_state_injected: bool = False
 
-    def __init__(self, manager: "UserSandboxManager", user_id: str) -> None:
+    def __init__(
+        self,
+        manager: "UserSandboxManager | None",
+        user_id: str,
+    ) -> None:
         super().__init__()
         self._manager = manager
         self._user_id = user_id
         self._bash: Bash | None = None
+        self._local_backend: LocalBackend | None = None
+        self._local_workdir: Path | None = None
         self._lock = asyncio.Lock()
+
+        # 按 mode 切换 description —— LLM 看到的"环境"语义跟实际 backend 对齐。
+        # class-level 默认值 _LAZY_BASH_DESCRIPTION 在这里被覆盖。
+        mode = settings.agent_sandbox_mode
+        if mode == "local":
+            self.description = _LAZY_BASH_DESCRIPTION_LOCAL
+        elif mode == "none":
+            self.description = _LAZY_BASH_DESCRIPTION_NONE
 
     async def check_permissions(self, tool_input, context):
         """Bash 永远 ALLOW,不弹确认。本身覆盖了 ToolBase 的抽象方法,
@@ -347,11 +397,17 @@ class LazyBash(ToolBase):
         return await _bash_auto_allow(tool_input, context)
 
     async def _ensure(self) -> Bash:
+        """docker mode:惰性创建 sandbox。"""
         if self._bash is not None:
             return self._bash
         async with self._lock:
             if self._bash is not None:
                 return self._bash
+            if self._manager is None:
+                raise RuntimeError(
+                    "LazyBash: docker mode requires UserSandboxManager "
+                    "(AGENT_SANDBOX_MODE=docker 时 manager 不可为 None)",
+                )
             sandbox = await self._manager.get_or_create(self._user_id)
             await self._manager.touch(self._user_id)
             bash = sandbox.bash_tool
@@ -363,13 +419,63 @@ class LazyBash(ToolBase):
             )
             return bash
 
+    def _ensure_local(self) -> Bash:
+        """local mode:构造 LocalBackend + bash,缓存复用。
+
+        同步路径。从 async call() 调进来时,在 event loop 内单线程跑,
+        多次并发 call() 不会真同时跑进这一段(它们各自的 IO 在这之前/之后
+        才能交错),所以不用 asyncio.Lock。重复构造只浪费一次 mkdir +
+        LocalBackend 实例化,无害。
+        """
+        if self._bash is not None:
+            return self._bash
+        sanitized = sanitize_user_id(self._user_id)
+        root = Path(os.path.expanduser(settings.agent_local_sandbox_root))
+        workdir = root / sanitized
+        workdir.mkdir(parents=True, exist_ok=True)
+        backend = LocalBackend()
+        bash = Bash(
+            backend=backend,
+            cwd=workdir,
+        )
+        bash.check_permissions = _bash_auto_allow
+        self._local_backend = backend
+        self._local_workdir = workdir
+        self._bash = bash
+        logger.info(
+            "lazy local backend materialized user=%s workdir=%s",
+            self._user_id, workdir,
+        )
+        return bash
+
     async def call(
         self,
         command: str,
         description: str = "",
         timeout: int = 120000,
     ) -> AsyncGenerator[ToolChunk, None]:
-        bash = await self._ensure()
+        mode = settings.agent_sandbox_mode
+        if mode == "none":
+            yield ToolChunk(
+                content=[TextBlock(
+                    type="text",
+                    text=(
+                        "❌ 当前环境未启用 sandbox(AGENT_SANDBOX_MODE=none),"
+                        "bash 工具不可用。\n"
+                        "👉 你还有其他工具可用;如需执行命令,"
+                        "改用纯函数式工具或让用户在 host 直接跑。"
+                    ),
+                )],
+                state=ToolResultState.ERROR,
+                is_last=True,
+            )
+            return
+
+        if mode == "local":
+            bash = self._ensure_local()
+        else:  # docker
+            bash = await self._ensure()
+
         async for chunk in bash.call(
             command=command,
             description=description,

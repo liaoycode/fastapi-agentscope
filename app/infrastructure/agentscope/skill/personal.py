@@ -51,10 +51,26 @@ class PersonalSkillLoader(SkillLoaderBase):
 
     @property
     def sandbox_personal_dir(self) -> str:
-        """sandbox 内 personal skill 根目录。LLM 通过 Skill.dir 走到这里。"""
+        """personal skill 在 LLM 视角下的根目录。
+
+        docker mode:返回 sandbox 内路径(``{container_dir}/{personal_subdir}``),
+        跟命名卷挂载点对齐。
+        local / none mode:返回 host 上的专属目录
+        (``~/.agent-sandbox/<sanitized_user_id>/personal_skills``),
+        LLM 通过这个 dir cd 进去能在 host 子进程里直接看到文件。
+        """
+        if settings.agent_sandbox_mode == "docker":
+            return (
+                f"{settings.agent_workspace_container_dir}"
+                f"/{settings.agent_skill_personal_subdir}"
+            )
+        from app.infrastructure.agentscope.sandbox.user_workspace import (
+            sanitize_user_id,
+        )
+        sanitized = sanitize_user_id(self.user_id)
         return (
-            f"{settings.agent_workspace_container_dir}"
-            f"/{settings.agent_skill_personal_subdir}"
+            f"{os.path.expanduser(settings.agent_local_sandbox_root)}"
+            f"/{sanitized}/{settings.agent_skill_personal_subdir}"
         )
 
     async def close(self) -> None:
@@ -67,6 +83,14 @@ class PersonalSkillLoader(SkillLoaderBase):
                 "Falling back to public skills only.",
             )
             return []
+
+        # local / none mode:PersonalSkillLoader 返回的 Skill.dir 是 host 路径,
+        # LLM 期望在那里能直接看到 SKILL.md / scripts/。所以先把 personal
+        # skill 从 DB 物化到 host 目录(docker mode 下 staging 流程会做这件事,
+        # 但那时 target_root 是 docker 容器内的 staging 目录,跟这里无关)。
+        if settings.agent_sandbox_mode != "docker":
+            host_dir = Path(self.sandbox_personal_dir)
+            await self.materialize_all(host_dir)
 
         skills: list[Skill] = []
         try:

@@ -26,9 +26,18 @@ import os
 import ssl
 from pathlib import Path
 
-import aiodocker
+try:
+    import aiodocker
+    _HAS_AIODOCKER = True
+except ImportError:
+    aiodocker = None  # type: ignore[assignment]
+    _HAS_AIODOCKER = False
 
 from app.core.config.env_config import settings
+
+
+class DockerUnavailableError(RuntimeError):
+    """aiodocker 没装(典型场景:AGENT_SANDBOX_MODE=local/none 但模块被 import)。"""
 
 
 def _candidate_unix_socket_urls() -> list[str]:
@@ -60,7 +69,17 @@ def _candidate_unix_socket_urls() -> list[str]:
 
 
 def make_docker_client() -> aiodocker.Docker:
-    """构造 aiodocker 客户端:探测优先,settings 兜底。"""
+    """构造 aiodocker 客户端:探测优先,settings 兜底。
+
+    没装 aiodocker 时抛 ``DockerUnavailableError``——上层(plugin / LazyBash)
+    按 ``AGENT_SANDBOX_MODE`` 决定是否需要捕获。
+    """
+    if not _HAS_AIODOCKER:
+        raise DockerUnavailableError(
+            "aiodocker is not installed; cannot construct a Docker client. "
+            "Set AGENT_SANDBOX_MODE=local or AGENT_SANDBOX_MODE=none "
+            "to skip docker-dependent code paths.",
+        )
     settings_url = settings.agent_docker_host
 
     ssl_ctx: ssl.SSLContext | None = None
@@ -79,4 +98,4 @@ def make_docker_client() -> aiodocker.Docker:
     return aiodocker.Docker(url=settings_url, ssl_context=ssl_ctx)
 
 
-__all__ = ["make_docker_client"]
+__all__ = ["make_docker_client", "DockerUnavailableError", "_HAS_AIODOCKER"]

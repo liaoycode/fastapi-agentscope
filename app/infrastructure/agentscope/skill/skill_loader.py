@@ -108,13 +108,28 @@ def build_skill_loaders(
     Skill.name and lets later loaders override earlier ones, so any
     personal skill whose name matches a public one wins.
 
-    public skill 从 host ``public_dir`` 读 SKILL.md,但 ``Skill.dir`` 被
-    SandboxLocalSkillLoader 改写成 sandbox 路径。LLM 看到的 dir 跟实际
-    sandbox 内目录对齐 —— 这是命名约定。
+    public skill 从 host ``public_dir`` 读 SKILL.md,``Skill.dir`` 的写法
+    按 ``AGENT_SANDBOX_MODE`` 决定:
+      - docker —— ``Skill.dir`` 改写成 ``{container_dir}/{public_subdir}/<name>/``
+        (LLM 看到的路径在 sandbox 内,跟命名卷挂载点对齐)
+      - local / none —— ``Skill.dir`` 用 host 原路径(``<public_dir>/<name>/``)
     """
     final_user_id = user_id if user_id else CURRENT_USER_ID
+
+    if settings.agent_sandbox_mode == "docker":
+        public_loader: SkillLoaderBase = SandboxLocalSkillLoader(
+            directory=public_dir,
+            scan_subdir=True,
+        )
+    else:
+        # local / none mode:不要改写路径,LLM 拿到的 dir 就是 host 真实路径
+        public_loader = LocalSkillLoader(
+            directory=public_dir,
+            scan_subdir=True,
+        )
+
     return [
-        SandboxLocalSkillLoader(directory=public_dir, scan_subdir=True),
+        public_loader,
         PersonalSkillLoader(user_id=final_user_id),
     ]
 

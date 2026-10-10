@@ -1,4 +1,6 @@
 # app/config.py
+from typing import Literal
+
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
@@ -42,6 +44,14 @@ class Settings(BaseSettings):
 
     # agentscope
     agent_enable: bool
+    # sandbox 运行模式:
+    #   docker —— 每用户一个隔离 docker 容器(默认)
+    #   local  —— bash 跑在 host 子进程,每用户一个目录;不依赖 docker
+    #   none   —— 完全不要 sandbox,bash 工具返回结构化错误,其他功能照常用
+    agent_sandbox_mode: Literal["docker", "local", "none"] = "local"
+    # local mode 下每个 user 的工作目录根(host 上的),
+    #       host/容器/macOS 通用。个人路径 = "在 user 目录下有一个专属的子目录"。
+    agent_local_sandbox_root: str = "~/.agent-sandbox"
     agent_system_prompt: str
     agent_workspace_image: str
     agent_workspace_mem_limit: str

@@ -56,6 +56,7 @@ class TransferTool(ToolBase):
             message=self._build_confirm_text(tool_input),
         )
 
+    # agent.py在收到RequireUserConfirmEvent后，会判断调用这个确认消息，并把这个字符串反馈给前端确认
     def confirmation_message(self, tool_input: dict) -> str:
         """展示给用户的确认提示。chat_stream 拿到 RequireUserConfirmEvent
         后会按 tool name 找到本实例并调这个方法——文本和 check_permissions

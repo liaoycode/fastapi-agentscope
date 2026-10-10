@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.core.bootstrap.abs_boot_plugin import AppPlugin
 from app.core.common.logger import getLogger
+from app.core.config.env_config import settings
 from app.infrastructure.agentscope.sandbox.user_sandbox import get_manager
 
 logger = getLogger()
@@ -110,12 +111,22 @@ class AgentscopePlugin(AppPlugin):
     """
 
     async def on_startup(self, app: FastAPI):
+        if settings.agent_sandbox_mode != "docker":
+            logger.warning(
+                "AgentscopePlugin: AGENT_SANDBOX_MODE=%s, "
+                "skipping docker init (sweep/prewarm/reaper)",
+                settings.agent_sandbox_mode,
+            )
+            return
         manager = get_manager()
         await manager.sweep_orphans()
         asyncio.create_task(self._prewarm_image())
         manager.start_reaper()
 
     async def on_shutdown(self, app: FastAPI):
+        if settings.agent_sandbox_mode != "docker":
+            # local/none mode 下没有 docker 容器要关,get_manager() 也没人调过。
+            return
         manager = get_manager()
         await manager.stop_reaper()
         await manager.close_all()
