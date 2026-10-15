@@ -61,6 +61,9 @@ _DEFAULT_PROMPT = load_prompt(_DEFAULT_PROMPT_NAME)
 def _get_model() -> OpenAIChatModel:
     global _model
     if _model is None:
+        # settings.llm_extra_body 默认 {},用 `or None` 让空 dict 不带
+        # extra_body 字段发出去(某些上游对空 {} 也会报 400)。
+        extra_body = settings.llm_extra_body or None
         _model = OpenAIChatModel(
             credential=OpenAICredential(
                 api_key=SecretStr(settings.llm_api_key),
@@ -68,6 +71,7 @@ def _get_model() -> OpenAIChatModel:
             ),
             model=settings.llm_model_name,
             context_size=settings.llm_context_size,
+            extra_body=extra_body,
         )
     return _model
 

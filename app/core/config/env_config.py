@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     llm_model_name:str
     # 模型上下文窗口大小(模型固有属性,AgentScope 用它算 trigger_ratio 阈值)
     llm_context_size: int = 128000
+    # 透传给 chat.completions.create(extra_body=...) 的字典。pydantic
+    # 从 env 自动 JSON 解析,默认 {} 表示不传 extra_body。
+    # 例子(MiniMax 推理模型,把推理从 content 拆到 reasoning_content):
+    #   LLM_EXTRA_BODY={"reasoning_split": true}
+    llm_extra_body: dict = {}
 
     # agentscope
     agent_enable: bool
