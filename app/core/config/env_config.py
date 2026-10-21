@@ -99,6 +99,13 @@ class Settings(BaseSettings):
     # auto-pre-close 滚动保留份数;manual 标签不滚动。
     agent_snapshot_max_auto_per_user: int = 5
 
+    # 文件上传
+    # 单文件最大字节数(默认 50MB)
+    upload_max_bytes: int = 50 * 1024 * 1024
+    # 允许的扩展名,逗号分隔字符串(pydantic-settings 对 set[str] 解析不友好,
+    # 解析时在路由里 split + 校验)
+    upload_allowed_extensions: str = ".xlsx,.xls,.csv,.txt,.md,.py,.json,.log"
+
 
     class Config:
         env_file = ".env"

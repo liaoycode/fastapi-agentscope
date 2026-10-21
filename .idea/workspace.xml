@@ -4,17 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="去掉沙箱日志输出控制">
+    <list default="true" id="843c2388-1a4f-44f8-9afa-d7f0a0af0732" name="Changes" comment="增加沙箱选择：docker、本地、none">
       <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/bootstrap/agentscope/agentscope_plugin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/bootstrap/agentscope/agentscope_plugin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/agent_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/agent_router.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/config/env_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config/env_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/prompt/prompts/default_system.md" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/prompt/prompts/default_system.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/docker_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/docker_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/snapshot.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/snapshot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/user_sandbox.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/sandbox/user_sandbox.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/skill/personal.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/skill/personal.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/infrastructure/agentscope/skill/skill_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/agentscope/skill/skill_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/infrastructure/tools/test_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/infrastructure/tools/test_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/chat.html" beforeDir="false" afterPath="$PROJECT_DIR$/static/chat.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,18 +39,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/home/liaoyun/cmdi/code/fastapi-demo",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/liaoyun/cmdi/code/fastapi-demo&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -165,8 +165,27 @@
       <option name="project" value="LOCAL" />
       <updated>1791431138625</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="增加沙箱选择：docker、本地、none">
+      <option name="closed" value="true" />
+      <created>1791613787337</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1791613787337</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="1. 初始化加载插件&#10;2.统一返回&#10;3. 重复提交限制" />
@@ -174,7 +193,8 @@
     <MESSAGE value="增加agentscope智能体" />
     <MESSAGE value="增加沙箱日志输出控制" />
     <MESSAGE value="去掉沙箱日志输出控制" />
-    <option name="LAST_COMMIT_MESSAGE" value="去掉沙箱日志输出控制" />
+    <MESSAGE value="增加沙箱选择：docker、本地、none" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加沙箱选择：docker、本地、none" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -216,13 +236,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app/infrastructure/agentscope/agent.py</url>
-          <line>196</line>
+          <line>200</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app/infrastructure/agentscope/agent.py</url>
-          <line>123</line>
+          <line>127</line>
           <option name="timeStamp" value="28" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/infrastructure/tools/associate_cell.py</url>
+          <line>55</line>
+          <option name="timeStamp" value="29" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

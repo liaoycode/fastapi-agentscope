@@ -21,12 +21,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
 from app.core.common.logger import getLogger
+from app.core.exceptions.exception.business_exception import BusinessException
 from app.domain.services.session_service import (
     _auto_deny_orphan_tool_calls,
     load_state,
     save_state,
 )
 from app.infrastructure.agentscope.agent import chat_stream, _MSG_COMPLETE
+from app.infrastructure.agentscope.sandbox.user_sandbox import get_user_workdir
 from app.infrastructure.datasource import database as db
 from app.infrastructure.repositories.chat_session_state_repo import (
     ChatSessionStateRepository,
@@ -36,6 +38,11 @@ logger = getLogger()
 router = APIRouter(prefix="/agent", tags=["agent"])
 
 
+class FileMeta(BaseModel):
+    file_id: str = Field(..., description="upload 响应里的 file_id,uuid hex (32 chars)")
+    ext: str = Field(..., description="含前导点,如 \".csv\"")
+
+
 class ChatRequest(BaseModel):
     session_id: str | None = Field(
         default=None,
@@ -43,6 +50,10 @@ class ChatRequest(BaseModel):
     )
     user_id: str = Field(default="demo-user", description="用户标识")
     message: str = Field(..., description="本轮用户消息")
+    file_metas: list[FileMeta] = Field(
+        default_factory=list,
+        description="本次消息要分析的文件,前端从 upload/list 响应里拿",
+    )
 
 
 def _preview_text(context: list) -> str:
@@ -157,12 +168,39 @@ async def chat(req: ChatRequest):
         # 时也会被提前 deny,_build_resume_event 就拿不到 ASKING 了。
         _auto_deny_orphan_tool_calls(state)
         resume_event = None
-        user_msg = Msg(
-            name=req.user_id,
-            role="user",
-            content=[TextBlock(text=req.message)],
-        )
         pending_user_msg = None
+
+        # 构造 user_msg:如果带了 file_metas,前置一个 TextBlock 告诉 LLM
+        # 文件已就位。路径 mode-aware (docker → /sandbox, local → 绝对路径)。
+        if req.file_metas:
+            workdir = get_user_workdir(req.user_id)
+            if workdir is None:
+                raise BusinessException(40020, "当前 sandbox 模式不支持文件分析")
+            # 防御性校验:防前端被改或重放,阻止 path injection
+            for m in req.file_metas:
+                if not re.fullmatch(r"[0-9a-f]{32}", m.file_id):
+                    raise BusinessException(40012, "非法 file_id")
+                if "/" in m.ext or ".." in m.ext:
+                    raise BusinessException(40012, "非法 ext")
+            file_lines = "\n".join(
+                f"- {workdir}/uploads/{m.file_id}{m.ext}"
+                for m in req.file_metas
+            )
+            preamble = TextBlock(text=(
+                f"用户已上传 {len(req.file_metas)} 个文件:\n"
+                f"{file_lines}\n"
+                f"请用 ls {workdir}/uploads/ 查看,根据文件类型选择合适方式分析 "
+                f"(文本可直接 cat/grep,表格数据可用 python + pandas)。"
+            ))
+            user_msg = Msg(
+                name=req.user_id, role="user",
+                content=[preamble, TextBlock(text=req.message)],
+            )
+        else:
+            user_msg = Msg(
+                name=req.user_id, role="user",
+                content=[TextBlock(text=req.message)],
+            )
 
     async def event_gen():
         async def checkpoint_save():

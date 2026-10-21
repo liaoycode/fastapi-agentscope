@@ -495,4 +495,28 @@ def get_manager() -> UserSandboxManager:
     return _manager
 
 
-__all__ = ["UserSandbox", "UserSandboxManager", "get_manager", "LazyBash"]
+def get_user_workdir(user_id: str) -> str | None:
+    """根据 agent_sandbox_mode 返回用户工作根目录。
+
+    - docker: /sandbox (容器内,所有用户共享同一路径,容器本身按 user_id 隔离)
+    - local:  ~/.agent-sandbox/<sanitized_user_id>/ (host 绝对路径)
+    - none:   None (无执行环境)
+
+    文件上传/查询的路径前缀都用这个,保证 mode-aware 一致。
+    """
+    mode = settings.agent_sandbox_mode
+    if mode == "docker":
+        return settings.agent_workspace_container_dir
+    if mode == "local":
+        root = Path(os.path.expanduser(settings.agent_local_sandbox_root))
+        return str((root / sanitize_user_id(user_id)).resolve())
+    return None
+
+
+__all__ = [
+    "UserSandbox",
+    "UserSandboxManager",
+    "get_manager",
+    "get_user_workdir",
+    "LazyBash",
+]

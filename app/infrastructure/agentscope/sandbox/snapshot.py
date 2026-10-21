@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 _SAVE_CMD = (
-    "tar --exclude='skills' --exclude='personal_skills' "
+    "tar --exclude='skills' --exclude='personal_skills' --exclude='uploads' "
     "-czf - -C /sandbox ."
 )
 

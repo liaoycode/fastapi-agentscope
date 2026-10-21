@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sandbox Admin</title>
+<script src="marked.min.js"></script>
+<script src="purify.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    background: #0f1115;
+    color: #e6e6e6;
+    overflow: hidden;
+  }
+  .app { display: flex; height: 100vh; }
+
+  /* ----- 左侧 user list ----- */
+  .sidebar {
+    width: 320px;
+    flex: 0 0 320px;
+    background: #15181f;
+    border-right: 1px solid #232830;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid #232830;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sidebar-header h2 {
+    margin: 0;
+    font-size: 15px;
+    color: #e6e6e6;
+  }
+  .sidebar-header .api-row {
+    display: flex;
+    gap: 6px;
+    font-size: 12px;
+    align-items: center;
+  }
+  .sidebar-header .api-row input {
+    flex: 1;
+    min-width: 0;
+    background: #0f1115;
+    color: #e6e6e6;
+    border: 1px solid #2c323b;
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 12px;
+    outline: none;
+  }
+  .sidebar-header .api-row input:focus { border-color: #4f8cff; }
+  .sidebar-header .actions {
+    display: flex;
+    gap: 6px;
+  }
+  .sidebar-header button {
+    background: #4f8cff;
+    color: #fff;
+    border: 0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sidebar-header button:hover { background: #3a78e8; }
+  .sidebar-header button.danger { background: #d9534f; }
+  .sidebar-header button.danger:hover { background: #c9302c; }
+  .user-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .user-list::-webkit-scrollbar { width: 6px; }
+  .user-list::-webkit-scrollbar-thumb { background: #2c323b; border-radius: 3px; }
+  .user {
+    padding: 10px 14px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    border-bottom: 1px solid #1d2129;
+  }
+  .user:hover { background: #1c2029; }
+  .user.active { background: #1c2230; border-left-color: #4f8cff; }
+  .user .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .user .uid { font-weight: 500; color: #e6e6e6; }
+  .status-pill {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #2c323b;
+    color: #9ba6b3;
+  }
+  .status-pill.running { background: #1f4f2e; color: #6dd49e; }
+  .status-pill.stopped { background: #3a2c1f; color: #d4a96d; }
+  .user .meta {
+    font-size: 11px;
+    color: #7a8493;
+    margin-top: 4px;
+  }
+
+  /* ----- 右侧 detail ----- */
+  .detail {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .detail-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #232830;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .detail-header .title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .detail-header h3 {
+    margin: 0;
+    font-size: 14px;
+  }
+  .detail-header .actions {
+    display: flex;
+    gap: 6px;
+  }
+  .detail-header .actions button {
+    background: #2c323b;
+    color: #e6e6e6;
+    border: 0;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .detail-header .actions button:hover { background: #3a414b; }
+  .detail-header .actions button.danger { background: #d9534f; }
+  .detail-header .actions button.danger:hover { background: #c9302c; }
+  .detail-header .path-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+    color: #7a8493;
+  }
+  .detail-header .path-row input {
+    flex: 1;
+    max-width: 300px;
+    background: #0f1115;
+    color: #e6e6e6;
+    border: 1px solid #2c323b;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    outline: none;
+  }
+  .detail-header .path-row input:focus { border-color: #4f8cff; }
+
+  .detail-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .detail-body::-webkit-scrollbar { width: 6px; }
+  .detail-body::-webkit-scrollbar-thumb { background: #2c323b; border-radius: 3px; }
+  .empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #7a8493;
+    font-size: 13px;
+  }
+  .entry {
+    padding: 6px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    border-bottom: 1px solid #1d2129;
+  }
+  .entry:hover { background: #1c2029; }
+  .entry .icon { width: 16px; flex: 0 0 16px; text-align: center; color: #7a8493; }
+  .entry .name { flex: 1; color: #e6e6e6; }
+  .entry .size { color: #7a8493; font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; }
+  .entry .mtime { color: #7a8493; min-width: 130px; }
+  .entry .actions {
+    display: flex;
+    gap: 4px;
+  }
+  .entry .actions button {
+    background: #2c323b;
+    color: #e6e6e6;
+    border: 0;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .entry .actions button:hover { background: #4f8cff; }
+  .entry .actions button.danger { background: #d9534f; }
+  .entry .actions button.danger:hover { background: #c9302c; }
+
+  /* 目录树 —— 缩进 + 可折叠 */
+  .tree { padding: 4px 0; }
+  .tree-node { display: block; }
+  .tree-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #1a1e26;
+  }
+  .tree-row:hover { background: #1c2029; }
+  .tree-row .twist {
+    width: 14px;
+    flex: 0 0 14px;
+    text-align: center;
+    color: #7a8493;
+    font-size: 10px;
+    transition: transform 0.15s;
+  }
+  .tree-row .icon { width: 16px; flex: 0 0 16px; text-align: center; }
+  .tree-row .name { flex: 1; color: #e6e6e6; }
+  .tree-row .size {
+    color: #7a8493;
+    font-variant-numeric: tabular-nums;
+    min-width: 80px;
+    text-align: right;
+  }
+  .tree-row .mtime {
+    color: #7a8493;
+    min-width: 100px;
+    font-size: 11px;
+  }
+  .tree-row .actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  .tree-row:hover .actions { opacity: 1; }
+  .tree-row .actions button {
+    background: #2c323b;
+    color: #e6e6e6;
+    border: 0;
+    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .tree-row .actions button:hover { background: #4f8cff; }
+  .tree-row .actions button.danger { background: #d9534f; }
+  .tree-row .actions button.danger:hover { background: #c9302c; }
+  .tree-children {
+    display: block;
+  }
+  .tree-children.collapsed { display: none; }
+  .tree-row.collapsed > .twist { transform: rotate(-90deg); }
+  /* 面包屑:在 tree 顶上显示当前路径,可点击跳转 */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: #7a8493;
+    background: #15181f;
+    border-bottom: 1px solid #232830;
+  }
+  .breadcrumb .crumb {
+    cursor: pointer;
+    color: #4f8cff;
+  }
+  .breadcrumb .crumb:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: #4a5260; }
+
+  /* 模态框(双输入框确认) */
+  .modal-mask {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #15181f;
+    border: 1px solid #2c323b;
+    border-radius: 8px;
+    padding: 20px;
+    width: 420px;
+    max-width: 90vw;
+  }
+  .modal h4 { margin: 0 0 12px 0; font-size: 14px; color: #ff6b6b; }
+  .modal p { margin: 0 0 14px 0; font-size: 13px; line-height: 1.6; }
+  .modal .row { display: flex; gap: 6px; justify-content: flex-end; }
+  .modal .row button {
+    background: #2c323b;
+    color: #e6e6e6;
+    border: 0;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .modal .row button:hover { background: #3a414b; }
+  .modal .row button.danger { background: #d9534f; }
+  .modal .row button.danger:hover { background: #c9302c; }
+
+  .toast {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: #2c323b;
+    color: #e6e6e6;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 200;
+    display: none;
+    max-width: 400px;
+  }
+  .toast.show { display: block; }
+  .toast.error { background: #4a1f1f; color: #ff9b9b; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 左侧 user list -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>Sandbox Admin</h2>
+      <div class="api-row">
+        <label>API</label>
+        <input id="apiBase" value="http://127.0.0.1:8000" />
+      </div>
+      <div class="actions">
+        <button id="refreshBtn">刷新</button>
+      </div>
+    </div>
+    <div id="userList" class="user-list">
+      <div class="empty">加载中…</div>
+    </div>
+  </div>
+
+  <!-- 右侧 detail -->
+  <div class="detail">
+    <div class="detail-header" id="detailHeader">
+      <div class="empty">从左侧选择一个用户查看详情</div>
+    </div>
+    <div class="detail-body" id="detailBody">
+      <div class="empty">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- 模态框 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h4 id="modalTitle">确认</h4>
+    <p id="modalBody">…</p>
+    <div class="row">
+      <button id="modalCancel">取消</button>
+      <button id="modalConfirm" class="danger">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const apiBase = () => $('apiBase').value.trim().replace(/\/+$/, '');
+
+let currentUser = null;
+let currentPath = '';
+let maxDepth = 4;
+
+function toast(msg, kind) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (kind === 'error' ? ' error' : '');
+  setTimeout(() => { el.className = 'toast'; }, 2500);
+}
+
+function fmtSize(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024*1024) return `${(n/1024).toFixed(1)} KB`;
+  if (n < 1024*1024*1024) return `${(n/1024/1024).toFixed(2)} MB`;
+  return `${(n/1024/1024/1024).toFixed(2)} GB`;
+}
+
+function fmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const now = new Date();
+  const diffSec = (now - d) / 1000;
+  if (diffSec < 60) return '刚刚';
+  if (diffSec < 3600) return `${Math.floor(diffSec/60)} 分钟前`;
+  if (diffSec < 86400) return `${Math.floor(diffSec/3600)} 小时前`;
+  if (diffSec < 604800) return `${Math.floor(diffSec/86400)} 天前`;
+  return d.toISOString().slice(0, 10);
+}
+
+// ── 模态确认 ────────────────────────────────────────
+let modalResolve = null;
+function confirmModal(title, body) {
+  return new Promise((res) => {
+    $('modalTitle').textContent = title;
+    $('modalBody').textContent = body;
+    $('modalMask').classList.add('show');
+    modalResolve = res;
+  });
+}
+$('modalCancel').onclick = () => {
+  $('modalMask').classList.remove('show');
+  modalResolve?.(false);
+  modalResolve = null;
+};
+$('modalConfirm').onclick = () => {
+  $('modalMask').classList.remove('show');
+  modalResolve?.(true);
+  modalResolve = null;
+};
+
+// ── user list ────────────────────────────────────────
+let currentRows = [];
+
+async function loadUsers() {
+  try {
+    const r = await fetch(`${apiBase()}/admin/volumes`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    currentRows = await r.json();
+    renderUsers();
+  } catch (e) {
+    $('userList').innerHTML = `<div class="empty">加载失败: ${e.message}</div>`;
+  }
+}
+
+function renderUsers() {
+  if (!currentRows.length) {
+    $('userList').innerHTML = '<div class="empty">暂无用户卷</div>';
+    return;
+  }
+  $('userList').innerHTML = currentRows.map(v => `
+    <div class="user ${currentUser === v.user_id ? 'active' : ''}"
+         data-uid="${escapeAttr(v.user_id)}">
+      <div class="top">
+        <span class="uid">${escapeHtml(v.user_id)}</span>
+        <span class="status-pill ${v.container_status}">${v.container_status}</span>
+      </div>
+      <div class="meta">${fmtSize(v.size_bytes)} · ${v.file_count} 个文件</div>
+    </div>
+  `).join('');
+  $('userList').querySelectorAll('.user').forEach(el => {
+    el.onclick = () => {
+      currentUser = el.dataset.uid;
+      currentPath = '';
+      renderUsers();
+      renderDetailHeader();
+      loadTree();
+    };
+  });
+}
+
+function refreshAfterMutation() {
+  loadUsers().then(() => {
+    if (currentUser) loadTree();
+  });
+}
+
+// ── tree ─────────────────────────────────────────────
+async function loadTree() {
+  if (!currentUser) return;
+  $('detailBody').innerHTML = '<div class="empty">加载中…</div>';
+  const url = new URL(`${apiBase()}/admin/volumes/${encodeURIComponent(currentUser)}/tree`);
+  if (currentPath) url.searchParams.set('path', currentPath);
+  url.searchParams.set('max_depth', maxDepth);
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const rows = await r.json();
+    renderTree(rows);
+  } catch (e) {
+    $('detailBody').innerHTML = `<div class="empty">加载失败: ${e.message}</div>`;
+  }
+}
+
+function renderTree(rows) {
+  if (!rows.length) {
+    $('detailBody').innerHTML = '<div class="empty">空目录</div>';
+    return;
+  }
+  const baseRel = currentPath ? currentPath.replace(/\/+$/, '') : '';
+  rows.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+    return a.path.localeCompare(b.path);
+  });
+
+  function rel(p) {
+    if (!baseRel) return p;
+    if (p === baseRel) return '';
+    if (p.startsWith(baseRel + '/')) return p.slice(baseRel.length + 1);
+    return p;
+  }
+
+  const root = { children: [] };
+  const dirs = new Map();
+  dirs.set('', root);
+
+  for (const e of rows) {
+    const r = rel(e.path);
+    if (r === '') continue;
+    const parts = r.split('/');
+    let parent = root;
+    let parentPath = '';
+    for (let i = 0; i < parts.length - 1; i++) {
+      const seg = parts[i];
+      const thisPath = parentPath ? parentPath + '/' + seg : seg;
+      if (!dirs.has(thisPath)) {
+        // 默认折叠 —— 深层目录按需展开,避免一进来就铺满屏
+        // (根的顶层目录在 dumps 时会被强制展开一次)
+        const dirNode = {
+          entry: {
+            path: (baseRel ? baseRel + '/' : '') + thisPath,
+            name: seg,
+            type: 'dir',
+            size_bytes: 0,
+            mtime: '',
+          },
+          children: [],
+          expanded: false,
+        };
+        dirs.set(thisPath, dirNode);
+        parent.children.push(dirNode);
+      }
+      parent = dirs.get(thisPath);
+      parentPath = thisPath;
+    }
+    if (e.type === 'file') {
+      parent.children.push({ entry: e, children: null });
+    } else {
+      const dirNode = dirs.get(r);
+      if (dirNode) {
+        dirNode.entry.mtime = e.mtime;
+        dirNode.entry.size_bytes = e.size_bytes;
+        dirNode.entry.path = e.path;
+      }
+    }
+  }
+
+  function renderNode(node, depth) {
+    if (node.children === null) {
+      const e = node.entry;
+      const isUploads = e.path === 'uploads' || e.path.startsWith('uploads/');
+      const actions = isUploads ? `
+        <div class="actions">
+          <button class="delete-btn danger" data-path="${escapeAttr(e.path)}">删除</button>
+        </div>
+      ` : '';
+      return `
+        <div class="tree-node">
+          <div class="tree-row" style="padding-left:${12 + depth * 16}px">
+            <span class="twist"></span>
+            <span class="icon">📄</span>
+            <span class="name">${escapeHtml(e.name)}</span>
+            <span class="size">${fmtSize(e.size_bytes)}</span>
+            <span class="mtime">${fmtTime(e.mtime)}</span>
+            ${actions}
+          </div>
+        </div>
+      `;
+    }
+    const e = node.entry;
+    const childrenHtml = node.children.map(c => renderNode(c, depth + 1)).join('');
+    const collapsedCls = node.expanded ? '' : 'collapsed';
+    return `
+      <div class="tree-node">
+        <div class="tree-row ${collapsedCls}" style="padding-left:${12 + depth * 16}px">
+          <span class="twist">▼</span>
+          <span class="icon">📁</span>
+          <span class="name">${escapeHtml(e.name)}</span>
+          <span class="size">${node.children.length} 项</span>
+          <span class="mtime"></span>
+        </div>
+        <div class="tree-children ${collapsedCls}">${childrenHtml}</div>
+      </div>
+    `;
+  }
+
+  $('detailBody').innerHTML = `
+    ${renderBreadcrumb()}
+    <div class="tree">${root.children.map(c => renderNode(c, 0)).join('')}</div>
+  `;
+
+  $('detailBody').querySelectorAll('.tree-row').forEach(el => {
+    const children = el.nextElementSibling;
+    if (children && children.classList.contains('tree-children')) {
+      el.onclick = () => {
+        el.classList.toggle('collapsed');
+        children.classList.toggle('collapsed');
+      };
+    }
+  });
+
+  $('detailBody').querySelectorAll('.delete-btn').forEach(el => {
+    el.onclick = async (ev) => {
+      ev.stopPropagation();
+      const p = el.dataset.path;
+      const ok = await confirmModal(
+        '删除文件',
+        `确认删除 ${p}?此操作不可撤销。`,
+      );
+      if (!ok) return;
+      try {
+        const r = await fetch(
+          `${apiBase()}/admin/volumes/${encodeURIComponent(currentUser)}/files`,
+          {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({paths: [p]}),
+          },
+        );
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+        const data = await r.json();
+        toast(`已删除 ${data.deleted} 个,缺失 ${(data.missing||[]).length} 个`);
+        refreshAfterMutation();
+      } catch (e) {
+        toast(`删除失败: ${e.message}`, 'error');
+      }
+    };
+  });
+}
+
+function renderBreadcrumb() {
+  const segs = currentPath ? currentPath.split('/') : [];
+  const parts = ['<span class="crumb" data-path="">根</span>'];
+  let path = '';
+  for (const s of segs) {
+    path = path ? path + '/' + s : s;
+    parts.push(`<span class="sep">/</span><span class="crumb" data-path="${escapeAttr(path)}">${escapeHtml(s)}</span>`);
+  }
+  const html = `<div class="breadcrumb">${parts.join('')}</div>`;
+  setTimeout(() => {
+    const root = $('detailBody');
+    if (!root) return;
+    root.querySelectorAll('.breadcrumb .crumb').forEach(el => {
+      el.onclick = () => {
+        currentPath = el.dataset.path;
+        renderDetailHeader();
+        loadTree();
+      };
+    });
+  }, 0);
+  return html;
+}
+
+// ── detail header + actions ──────────────────────────
+function renderDetailHeader() {
+  if (!currentUser) {
+    $('detailHeader').innerHTML = '<div class="empty">从左侧选择一个用户查看详情</div>';
+    return;
+  }
+  $('detailHeader').innerHTML = `
+    <div class="title">
+      <h3>${escapeHtml(currentUser)}</h3>
+      <div class="actions">
+        <button id="cleanupBtn">清理 >7天</button>
+        <button id="nukeBtn" class="danger">删除 Volume</button>
+      </div>
+    </div>
+    <div class="path-row">
+      <label>path</label>
+      <input id="pathInput" value="${escapeAttr(currentPath)}" placeholder="(workdir 根)" />
+      <button id="goBtn">进入</button>
+    </div>
+  `;
+  $('goBtn').onclick = () => {
+    currentPath = $('pathInput').value.trim();
+    loadTree();
+  };
+  $('pathInput').onkeydown = (e) => {
+    if (e.key === 'Enter') $('goBtn').click();
+  };
+  $('cleanupBtn').onclick = async () => {
+    const ok = await confirmModal(
+      '清理旧文件',
+      `删除 ${currentUser} 的 uploads/ 下 mtime > 7 天的所有文件?`,
+    );
+    if (!ok) return;
+    try {
+      const r = await fetch(
+        `${apiBase()}/admin/volumes/${encodeURIComponent(currentUser)}/cleanup?older_than_days=7`,
+        {method: 'POST'},
+      );
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+      const data = await r.json();
+      toast(`已清理 ${data.deleted} 个文件`);
+      refreshAfterMutation();
+    } catch (e) {
+      toast(`清理失败: ${e.message}`, 'error');
+    }
+  };
+  $('nukeBtn').onclick = async () => {
+    const ok = await confirmModal(
+      '⚠️ 删除 Volume',
+      `确认销毁 ${currentUser} 的整个工作卷?\n这会删除容器(若有)+ 卷命名卷\n所有上传的文件、个人 skill 都会丢失\n此操作不可撤销`,
+    );
+    if (!ok) return;
+    try {
+      const r = await fetch(
+        `${apiBase()}/admin/volumes/${encodeURIComponent(currentUser)}`,
+        {method: 'DELETE'},
+      );
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+      const data = await r.json();
+      toast(data.deleted ? 'Volume 已删除' : `失败: ${data.reason || ''}`);
+      currentUser = null;
+      currentPath = '';
+      renderDetailHeader();
+      $('detailBody').innerHTML = '<div class="empty">—</div>';
+      loadUsers();
+    } catch (e) {
+      toast(`删除失败: ${e.message}`, 'error');
+    }
+  };
+}
+
+// ── escape ──────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',
+  }[c]));
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/'/g, '&#39;');
+}
+
+// ── 启动 ─────────────────────────────────────────────
+$('refreshBtn').onclick = loadUsers;
+loadUsers();
+</script>
+</body>
+</html>

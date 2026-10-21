@@ -194,6 +194,13 @@
   }
   .msg.user .bubble { background: #232a38; }
   .msg.assistant .bubble { background: #1a1e26; }
+  /* 用户消息里附带的文件 chip 行 */
+  .msg-files { display: flex; flex-wrap: wrap; gap: 6px;
+               margin-bottom: 8px; padding-bottom: 8px;
+               border-bottom: 1px dashed #3a414b; }
+  .msg-file-chip { background: #1c2230; border: 1px solid #2c323b;
+                   border-radius: 4px; padding: 2px 8px;
+                   font-size: 12px; color: #b8c1cf; }
   .msg .role {
     font-size: 11px;
     color: #7a8493;
@@ -245,9 +252,9 @@
   .msg .md th { background: #1c2230; }
   .msg .md hr { border: 0; border-top: 1px solid #2c323b; margin: 8px 0; }
   .msg .md img { max-width: 100%; border-radius: 4px; }
+  /* 工具调用/结果:默认收起,点 summary 展开 */
   .msg .tool-block {
     margin-top: 8px;
-    padding: 8px 12px;
     background: #0f1115;
     border-radius: 4px;
     border-left: 2px solid #4f8cff;
@@ -256,8 +263,19 @@
     color: #a0c4ff;
     overflow-x: auto;
   }
+  .msg .tool-block > summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .msg .tool-block[open] > summary {
+    border-bottom: 1px solid #1c2029;
+    padding-bottom: 6px;
+  }
   .msg .tool-block .name { color: #4f8cff; font-weight: 600; }
-  .msg .tool-block .args { color: #7a8493; margin-top: 4px; white-space: pre-wrap; }
+  .msg .tool-block .args {
+    color: #7a8493; padding: 8px 12px; white-space: pre-wrap;
+  }
   .msg.streaming .bubble::after {
     content: '▍';
     color: #4f8cff;
@@ -274,21 +292,35 @@
     display: flex;
     justify-content: center;
   }
+  /* 输入区整体容器 —— 跟原 textarea 同样的边框/背景/圆角,chips 嵌在内部顶端 */
+  .input-wrapper {
+    width: 100%;
+    max-width: 800px;
+    background: #0f1115;
+    border: 1px solid #2c323b;
+    border-radius: 8px;
+    transition: border-color .12s;
+  }
+  .input-wrapper:focus-within { border-color: #4f8cff; }
+  /* 拖文件到输入框时高亮,提示"松手即可上传" */
+  .input-wrapper.drag-over {
+    border-color: #4f8cff;
+    background: #1c2230;
+  }
   .input-row {
     position: relative;
     width: 100%;
-    max-width: 800px;
   }
   .input-row textarea {
     display: block;
     width: 100%;
     box-sizing: border-box;
-    background: #0f1115;
+    background: transparent;
     color: #e6e6e6;
-    border: 1px solid #2c323b;
-    border-radius: 8px;
-    /* 右侧留出 ~64px 给浮在上面的发送按钮,文字不会被按钮盖住 */
-    padding: 10px 72px 10px 14px;
+    border: 0;
+    border-radius: 0;
+    /* 右侧留出空间给 📎 和 发送 按钮,文字不会被按钮盖住 */
+    padding: 10px 56px 10px 14px;
     font-size: 14px;
     font-family: inherit;
     line-height: 1.5;
@@ -298,26 +330,83 @@
     overflow: hidden;
     outline: none;
   }
-  .input-row textarea:focus { border-color: #4f8cff; }
   .input-row button {
     position: absolute;
     right: 8px;
     bottom: 8px;
-    background: #4f8cff;
-    color: #fff;
+    background: transparent;
+    color: #4f8cff;
     border: 0;
     border-radius: 6px;
-    padding: 0 16px;
-    font-size: 13px;
-    cursor: pointer;
+    padding: 0;
+    width: 24px;
     height: 28px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   }
-  .input-row button:hover:not(:disabled) { background: #3a78e8; }
+  .input-row button:hover:not(:disabled) { color: #3a78e8; }
   .input-row button:disabled {
-    background: #2c323b;
+    color: #2c323b;
     cursor: not-allowed;
-    color: #7a8493;
   }
+  .input-row button svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
+  /* 文件 chip 栏 —— 嵌在 .input-wrapper 顶部 */
+  .chip-bar { display: flex; gap: 6px;
+              padding: 8px 8px 0 8px;
+              flex-wrap: wrap; max-height: 110px;
+              overflow-y: auto; }
+  /* 没有 chip 时整个区域不可见,避免占空白 */
+  .chip-bar:empty { display: none; }
+  .chip { background: #1c2230; border: 1px solid #2c323b; border-radius: 6px;
+          padding: 3px 8px; font-size: 12px;
+          display: inline-flex; gap: 6px; align-items: center;
+          max-width: 220px; }
+  .chip .name { overflow: hidden; text-overflow: ellipsis;
+                white-space: nowrap; max-width: 160px; }
+  .chip .x { cursor: pointer; color: #7a8493; font-weight: bold;
+             line-height: 1; padding: 0 2px; }
+  .chip .x:hover { color: #ff6b6b; }
+  /* 上传中:加进度条,蓝色边框 */
+  .chip.pending {
+    border-color: #4f8cff;
+    background: #1a2230;
+  }
+  .chip.pending .progress-bar {
+    display: inline-block;
+    width: 60px;
+    height: 4px;
+    background: #2c323b;
+    border-radius: 2px;
+    overflow: hidden;
+    vertical-align: middle;
+  }
+  .chip.pending .progress-fill {
+    display: block;
+    height: 100%;
+    background: #4f8cff;
+    transition: width 0.15s ease-out;
+  }
+  .chip.pending .progress-text {
+    color: #4f8cff;
+    font-size: 11px;
+    min-width: 30px;
+    text-align: right;
+  }
+  /* 上传失败:红边框 + 红字 */
+  .chip.error {
+    border-color: #ff6b6b;
+    background: #2a1a1a;
+    color: #ff8a8a;
+  }
+  .chip.error .size { color: #ff8a8a; }
+  .chip .size { color: #7a8493; margin-left: -2px; }
   .empty-chat {
     flex: 1;
     display: flex;
@@ -355,9 +444,22 @@
       <div class="empty-chat">← 左侧选个会话，或点 "新会话"</div>
     </div>
     <form class="input-area" id="inputForm">
-      <div class="input-row">
-        <textarea id="inputBox" placeholder="输入消息，回车发送，Shift+回车换行" rows="4"></textarea>
-        <button id="sendBtn" type="submit">发送</button>
+      <div class="input-wrapper" id="inputWrapper">
+        <div id="fileChipBar" class="chip-bar"></div>
+        <div class="input-row">
+          <textarea id="inputBox" placeholder="输入消息，回车发送，Shift+回车换行" rows="4"></textarea>
+          <input type="file" id="filePicker" hidden multiple
+                 accept=".xlsx,.xls,.csv,.txt,.md,.py,.json,.log" />
+          <button id="fileBtn" type="button" class="icon-only"
+                  title="上传文件" style="right: 32px;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5498 9.75V5H6.9502V9.75C6.9502 10.3299 7.4201 10.7998 8 10.7998C8.5799 10.7998 9.0498 10.3299 9.0498 9.75V4.5C9.0498 2.9536 7.7964 1.7002 6.25 1.7002C4.7036 1.7002 3.4502 2.9536 3.4502 4.5V9.75C3.4502 12.2629 5.4871 14.2998 8 14.2998C10.5129 14.2998 12.5498 12.2629 12.5498 9.75V4H13.9502V9.75C13.9502 13.0361 11.2861 15.7002 8 15.7002C4.71391 15.7002 2.0498 13.0361 2.0498 9.75V4.5C2.04981 2.1804 3.9304 0.299806 6.25 0.299805C8.5696 0.299805 10.4502 2.1804 10.4502 4.5V9.75C10.4502 11.1031 9.3531 12.2002 8 12.2002C6.6469 12.2002 5.5498 11.1031 5.5498 9.75Z" fill="currentColor"></path></svg>
+          </button>
+          <button id="sendBtn" type="submit" class="icon-only" title="发送">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2L8 13M8 2L3 7M8 2L13 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </form>
   </main>
@@ -370,6 +472,8 @@
   let activeStream = null;
   // 缓存会话列表(openSession 用它取 preview 作标题)
   let sessionsCache = [];
+  // 当前 session 选中的文件:key=sessionId|'__new__',value=[{file_id,ext,filename,size}]
+  const sessionFiles = new Map();
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -377,6 +481,10 @@
   const messagesEl = $('messages');
   const inputBox = $('inputBox');
   const sendBtn = $('sendBtn');
+  const fileBtn = $('fileBtn');
+  const filePicker = $('filePicker');
+  const fileChipBar = $('fileChipBar');
+  const inputWrapper = $('inputWrapper');
   const inputForm = $('inputForm');
   const chatHeader = $('chatHeader');
   const chatTitle = $('chatTitle');
@@ -474,20 +582,26 @@
     const roleLabel = role === 'user' ? '你' : '助手';
     const avatar = role === 'user' ? 'U' : 'A';
     let inner = '';
+    // 用户消息:把上传的文件渲染成 chip 行(在文本上方)
+    if (role === 'user' && msg.files && msg.files.length) {
+      inner += '<div class="msg-files">' + msg.files.map(f =>
+        `<span class="msg-file-chip">📄 ${escapeHtml(f.original_name || f.filename || '')}</span>`
+      ).join('') + '</div>';
+    }
     for (const block of (msg.content || [])) {
       if (block.type === 'text') {
         // 文本块走 markdown + HTML 渲染；tool_* 块保持纯代码
         inner += renderMarkdown(block.text || '');
       } else if (block.type === 'tool_use' || block.type === 'tool_call') {
-        inner += `<div class="tool-block">
-          <div class="name">🔧 ${escapeHtml(block.name || 'tool')}</div>
+        inner += `<details class="tool-block">
+          <summary>🔧 <span class="name">${escapeHtml(block.name || 'tool')}</span></summary>
           <div class="args">${escapeHtml(JSON.stringify(block.input || {}, null, 2))}</div>
-        </div>`;
+        </details>`;
       } else if (block.type === 'tool_result') {
-        inner += `<div class="tool-block">
-          <div class="name">📋 tool result</div>
+        inner += `<details class="tool-block">
+          <summary>📋 <span class="name">${escapeHtml(block.name || 'tool')}</span> 结果</summary>
           <div class="args">${escapeHtml(String(block.output || '').slice(0, 500))}</div>
-        </div>`;
+        </details>`;
       }
     }
     return `<div class="msg ${role}">
@@ -508,6 +622,7 @@
       (sessionsCache.find(r => r.session_id === sid) || {}).preview || '新会话',
     );
     chatEl.classList.remove('chat-empty');
+    renderChips();  // 切到历史会话:显示该 session 已上传的 chip
     messagesEl.innerHTML = '<div class="empty-chat">加载中...</div>';
     try {
       const resp = await fetch(`${apiBase()}/agent/sessions/${sid}/messages`);
@@ -569,9 +684,28 @@
       message: text,
     };
     if (currentSessionId) payload.session_id = currentSessionId;
+    // 把当前 session 的 chip 文件一起带上 —— 后端会把路径告诉 LLM,让它自己分析
+    const chips = sessionFiles.get(currentSessionKey()) || [];
+    if (chips.length) {
+      payload.file_metas = chips.map(c => ({
+        file_id: c.file_id,
+        ext: c.ext,
+      }));
+    }
 
-    // append user msg
-    appendMessage({ role: 'user', content: [{ type: 'text', text }] });
+    // append user msg(把当前 session 的 chip 文件也带上,渲染在对话气泡里)
+    const userMsg = { role: 'user', content: [{ type: 'text', text }] };
+    if (chips.length) userMsg.files = chips.map(c => ({
+      file_id: c.file_id,
+      ext: c.ext,
+      filename: c.filename,
+      original_name: c.original_name,
+      size: c.size,
+    }));
+    appendMessage(userMsg);
+    // 立即清掉当前 session 的 chip —— 文件已随消息发出,不让它继续占输入框
+    sessionFiles.delete(currentSessionKey());
+    renderChips();
     // 发出首条消息 → 切回正常布局(输入框落到底部,消息区填满)
     chatEl.classList.remove('chat-empty');
 
@@ -617,6 +751,11 @@
         }
         const data = dataLines.join('\n');
         if (eventName === 'session') {
+          // 新会话(__new__)→ 真实 session_id:把 chip 从 '__new__' 迁过去
+          if (currentSessionId === null && sessionFiles.has('__new__')) {
+            sessionFiles.set(data, sessionFiles.get('__new__'));
+            sessionFiles.delete('__new__');
+          }
           currentSessionId = data;
           // 新会话尚无 preview,先用用户刚发的首句消息做标题,
           // 等 loadSessions 完成后会自动刷新成 server 端的 preview
@@ -668,7 +807,9 @@
   inputForm.onsubmit = (e) => {
     e.preventDefault();
     const text = inputBox.value.trim();
-    if (!text) return;
+    // 没有文字也行 —— 只要当前 session 有 chip 文件就能发
+    const hasChips = (sessionFiles.get(currentSessionKey()) || []).length > 0;
+    if (!text && !hasChips) return;
     inputBox.value = '';
     autoSize();
     send(text);
@@ -692,9 +833,179 @@
     chatHeader.classList.add('hidden');
     chatEl.classList.add('chat-empty');
     messagesEl.innerHTML = '<div class="empty-chat">← 发条消息开始</div>';
+    renderChips();  // 新会话 chip 区为空(只显示当前 session 已上传的)
   };
-  refreshBtn.onclick = loadSessions;
-  userIdInput.onchange = loadSessions;
+  refreshBtn.onclick = () => { loadSessions(); };
+  userIdInput.onchange = () => { loadSessions(); };
+
+  // ---------- file 上传 / chip ----------
+
+  function currentSessionKey() {
+    return currentSessionId || '__new__';
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  }
+
+  function renderChips() {
+    const k = currentSessionKey();
+    const files = sessionFiles.get(k) || [];
+    fileChipBar.innerHTML = files.map(f => {
+      // 上传中:进度条 + 百分比,禁用删除
+      if (f.pending) {
+        const pct = f.progress || 0;
+        return `<span class="chip pending">
+          📄 ${escapeHtml(f.original_name || f.filename)}
+          <span class="size">(${formatSize(f.size)})</span>
+          <span class="progress-bar"><span class="progress-fill" style="width:${pct}%"></span></span>
+          <span class="progress-text">${pct}%</span>
+        </span>`;
+      }
+      // 上传失败:红字 + 错误信息
+      if (f.error) {
+        return `<span class="chip error" title="${escapeHtml(f.error_msg || '')}">
+          ⚠ ${escapeHtml(f.original_name || f.filename)}
+          <span class="size">(上传失败)</span>
+          <span class="x" data-id="${f.file_id}">×</span>
+        </span>`;
+      }
+      // 上传成功
+      return `<span class="chip">📄 ${escapeHtml(f.original_name || f.filename)}
+         <span class="size">(${formatSize(f.size)})</span>
+         <span class="x" data-id="${f.file_id}">×</span></span>`;
+    }).join('');
+    fileChipBar.querySelectorAll('.x').forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.id;
+        sessionFiles.set(k, files.filter(f => f.file_id !== id));
+        renderChips();
+      };
+    });
+  }
+
+  fileBtn.onclick = () => filePicker.click();
+  filePicker.onchange = async (e) => {
+    await uploadFiles(e.target.files);
+    e.target.value = '';  // 允许重传同名
+  };
+
+  // 拖文件到输入框直接上传
+  ['dragenter', 'dragover'].forEach(evt =>
+    inputWrapper.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      inputWrapper.classList.add('drag-over');
+    }),
+  );
+  ['dragleave', 'dragend'].forEach(evt =>
+    inputWrapper.addEventListener(evt, (e) => {
+      // 只有真正离开 wrapper 才清高亮 —— 子元素触发也会冒泡,要判断 relatedTarget
+      if (!inputWrapper.contains(e.relatedTarget)) {
+        inputWrapper.classList.remove('drag-over');
+      }
+    }),
+  );
+  inputWrapper.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    inputWrapper.classList.remove('drag-over');
+    const files = e.dataTransfer ? e.dataTransfer.files : null;
+    if (files && files.length) await uploadFiles(files);
+  });
+
+  async function uploadFiles(files) {
+    // 每次上传现取 userId —— 不能用 send() 内的局部 const
+    const userId = userIdInput.value.trim() || 'demo-user';
+    for (const f of files) {
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('user_id', userId);
+
+      // 上传中先占一个"进度 chip", 完成后转正 / 失败时换错误样式
+      const tempId = '__pending_' + Math.random().toString(36).slice(2);
+      const k = currentSessionKey();
+      if (!sessionFiles.has(k)) sessionFiles.set(k, []);
+      sessionFiles.get(k).push({
+        file_id: tempId,
+        pending: true,
+        filename: f.name,
+        original_name: f.name,
+        size: f.size,
+        progress: 0,
+      });
+      renderChips();
+
+      try {
+        const meta = await xhrUpload(`${apiBase()}/file/upload`, fd, (pct) => {
+          const list = sessionFiles.get(k) || [];
+          const item = list.find(x => x.file_id === tempId);
+          if (item) {
+            item.progress = pct;
+            renderChips();
+          }
+        });
+        // 成功:把占位 chip 换成真 meta
+        const list = sessionFiles.get(k) || [];
+        const idx = list.findIndex(x => x.file_id === tempId);
+        if (idx >= 0) {
+          list.splice(idx, 1, {
+            file_id: meta.file_id,
+            ext: meta.ext,
+            filename: meta.filename,
+            original_name: meta.filename,
+            size: meta.size,
+          });
+          renderChips();
+        }
+      } catch (err) {
+        // 失败:占位 chip 换成 error 态(留 5s 后自动消失)
+        const list = sessionFiles.get(k) || [];
+        const idx = list.findIndex(x => x.file_id === tempId);
+        if (idx >= 0) {
+          const item = list[idx];
+          item.error = true;
+          item.error_msg = err.message || String(err);
+          renderChips();
+          setTimeout(() => {
+            const cur = sessionFiles.get(k) || [];
+            const i = cur.findIndex(x => x.file_id === tempId && x.error);
+            if (i >= 0) {
+              cur.splice(i, 1);
+              renderChips();
+            }
+          }, 5000);
+        }
+      }
+    }
+  }
+
+  // 用 XHR 而不是 fetch —— fetch 没原生进度事件
+  function xhrUpload(url, fd, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round(e.loaded / e.total * 100));
+        }
+      };
+      xhr.onload = () => {
+        let body = null;
+        try { body = JSON.parse(xhr.responseText); } catch (_) { /* 留 null */ }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(body);
+        } else {
+          reject(new Error((body && body.message) || `HTTP ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('网络错误'));
+      xhr.onabort = () => reject(new Error('已取消'));
+      xhr.send(fd);
+    });
+  }
 
   // initial
   loadSessions();
